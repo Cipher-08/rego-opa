@@ -1,0 +1,40 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Conftest
+        run: |
+          wget https://github.com/open-policy-agent/conftest/releases/download/v0.34.0/conftest_0.34.0_Linux_x86_64.tar.gz
+          tar xzf conftest_0.34.0_Linux_x86_64.tar.gz
+          sudo mv conftest /usr/local/bin
+
+      - name: Fetch GitHub Actor Teams
+        id: get_teams
+        run: |
+          response=$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/user/teams")
+          echo "$response" > teams.json
+          jq -r '[.[] | select(.slug) | .slug]' teams.json > actor_teams.json
+
+      - name: Create Workflow Context File
+        run: |
+          echo '{"github": {"actor": "'${{ github.actor }}'", "teams": '$(cat actor_teams.json)'}}' > workflow_context.json
+
+      - name: Run Conftest policy check
+        run: conftest test workflow_context.json --policy policy/github/rbac.rego
+
+      - name: Terraform Init and Plan
+        if: success()  # Only runs if Conftest passes
+        run: |
+          terraform init
+          terraform plan
