@@ -30,12 +30,8 @@ jobs:
         run: |
           conftest test workflow_context.json --policy policy/github/rbac.rego || exit 1
 
-      - name: Fail if Policy Check Fails
-        if: failure()
-        run: exit 1
-
       - name: Terraform Init and Plan
-        if: success()
+        if: success()  # Only runs if Conftest passes
         run: |
           terraform init
           terraform plan
