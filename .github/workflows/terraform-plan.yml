@@ -8,10 +8,6 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-latest
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,16 +18,28 @@ jobs:
           tar xzf conftest_0.34.0_Linux_x86_64.tar.gz
           sudo mv conftest /usr/local/bin
 
+      - name: Install OPA
+        run: |
+          wget https://openpolicyagent.org/downloads/v0.40.0/opa_linux_amd64_static
+          chmod +x opa_linux_amd64_static
+          sudo mv opa_linux_amd64_static /usr/local/bin/opa
+
       - name: Create Workflow Context File
         run: |
           echo '{"github": {"actor": "'${{ github.actor }}'"}}' > workflow_context.json
 
-      - name: Run Conftest policy check
+      - name: Run OPA Policy Check
         run: |
-          conftest test workflow_context.json --policy policy/github/rbac.rego || exit 1
+          opa eval --input workflow_context.json --data policy/github/rbac.rego "data.github.rbac.allow_plan"
+
+      - name: Run Conftest Policy Check
+        run: conftest test workflow_context.json --policy policy/github/rbac.rego
 
       - name: Terraform Init and Plan
-        if: success()  # Only runs if Conftest passes
+        if: success()  # Only runs if both OPA and Conftest pass
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           terraform init
           terraform plan
