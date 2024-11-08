@@ -1,6 +1,6 @@
 # Specify the provider
 provider "aws" {
-  region = "us-east-1"  # Choose your preferred region
+  region = "us-east-1" 
 }
 
 # Create a VPC
@@ -9,7 +9,7 @@ resource "aws_vpc" "my_vpc" {
   enable_dns_support = true
   enable_dns_hostnames = true
   tags = {
-    Name = "MyVPC"
+    Name = "MyVPC  "
   }
 }
 
