@@ -8,6 +8,10 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,7 +27,8 @@ jobs:
           echo '{"github": {"actor": "'${{ github.actor }}'"}}' > workflow_context.json
 
       - name: Run Conftest policy check
-        run: conftest test workflow_context.json --policy policy/github/rbac.rego
+        run: |
+          conftest test workflow_context.json --policy policy/github/rbac.rego || exit 1
 
       - name: Terraform Init and Plan
         if: success()  # Only runs if Conftest passes
