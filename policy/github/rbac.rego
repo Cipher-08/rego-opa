@@ -3,7 +3,7 @@ package github.rbac
 default allow_plan = false
 
 # List of allowed GitHub users and team slugs (could be loaded from external data)
-allowed_users = {"user1", "user2"}
+allowed_users = {"Sid-Lais", "Cipher-08"}
 allowed_teams = {"team-slug1", "team-slug2"}
 
 # Allow plan if the GitHub actor matches an allowed user or is part of an allowed team
