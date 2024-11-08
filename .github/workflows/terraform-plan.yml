@@ -27,7 +27,8 @@ jobs:
           echo '{"github": {"actor": "'${{ github.actor }}'"}}' > workflow_context.json
 
       - name: Run Conftest policy check
-        run: conftest test workflow_context.json --policy policy/github/rbac.rego
+        run: |
+          conftest test workflow_context.json --policy policy/github/rbac.rego || exit 1
 
       - name: Fail if Policy Check Fails
         if: failure()
