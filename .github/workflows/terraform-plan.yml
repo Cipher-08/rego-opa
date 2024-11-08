@@ -8,6 +8,10 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}  # Set if region is specified in GitHub secrets
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,7 +30,7 @@ jobs:
         run: conftest test workflow_context.json --policy policy/github/rbac.rego
 
       - name: Terraform Init and Plan
-        if: success()  # Only runs if Conftest passes
+        if: success()
         run: |
           terraform init
           terraform plan
