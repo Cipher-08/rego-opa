@@ -29,8 +29,14 @@ jobs:
           echo '{"github": {"actor": "'${{ github.actor }}'"}}' > workflow_context.json
 
       - name: Run OPA Policy Check
+        id: opa_check
         run: |
-          opa eval --input workflow_context.json --data policy/github/rbac.rego "data.github.rbac.allow_plan"
+          result=$(opa eval --format=json --input workflow_context.json --data policy/github/rbac.rego "data.github.rbac.allow_plan")
+          allowed=$(echo $result | jq -r '.result[0].expressions[0].value')
+          if [ "$allowed" != "true" ]; then
+            echo "User is not authorized to run Terraform Plan."
+            exit 1
+          fi
 
       - name: Run Conftest Policy Check
         run: conftest test workflow_context.json --policy policy/github/rbac.rego
